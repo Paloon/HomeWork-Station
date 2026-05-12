@@ -237,8 +237,8 @@ taskForm.onsubmit = async (e) => {
     };
 
     const tasksRef = ref(db, 'assignments');
-    const new laRef = push(tasksRef);
-    await set(ref(db, `assignments/${new laRef.key}`), newTask);
+    const newTaskRef = push(tasksRef);
+    await set(ref(db, `assignments/${newTaskRef.key}`), newTask);
 
     taskForm.reset();
     modalAddTask.classList.add('hidden');
