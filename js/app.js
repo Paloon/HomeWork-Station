@@ -36,13 +36,43 @@ async function initStudents() {
         const studentsRef = ref(db, 'students');
         onValue(studentsRef, (snapshot) => {
             if (!snapshot.exists()) {
-                console.log("Initializing student data...");
+                console.log("Initializing real student data...");
                 const initialStudents = [
-                    { id: '1', no: 1, name: 'นายประกาศิต สุริยะ' },
-                    ...Array.from({ length: 34 }, (_, i) => ({
-                        id: (i + 2).toString(),
-                        no: i + 2,
-                        name: `นักเรียน คนที่ ${i + 2}`
+                    { id: '1', no: 1, studentId: '21807', name: 'นายประกาศิต สุริยะ' },
+                    { id: '2', no: 2, studentId: '21824', name: 'นายคุณธรรม ปาละพงษ์' },
+                    { id: '3', no: 3, studentId: '21825', name: 'นายจักรพงศ์ วงศ์ปัญญา' },
+                    { id: '4', no: 4, studentId: '21826', name: 'นายณชพล ชินวรรธนวงศ์' },
+                    { id: '5', no: 5, studentId: '21827', name: 'นายดนุพนธ์ ใจธรรม' },
+                    { id: '6', no: 6, studentId: '21829', name: 'นายทัศนัย มณีทอง' },
+                    { id: '7', no: 7, studentId: '21830', name: 'นายปุณณกรณ์ วงค์วัน' },
+                    { id: '8', no: 8, studentId: '21831', name: 'นายปุณณกันต์ วงค์วัน' },
+                    { id: '9', no: 9, studentId: '21833', name: 'นายพัทธดนย์ สุราใหม่' },
+                    { id: '10', no: 10, studentId: '21835', name: 'นายภูรินทร์ วงค์ห้อ' },
+                    { id: '11', no: 11, studentId: '21860', name: 'นายณัฐพล คำเพียว' },
+                    { id: '12', no: 12, studentId: '21936', name: 'นายรตนมรรค กันทาดง' },
+                    { id: '13', no: 13, studentId: '22776', name: 'นายนนทกร ถานี' },
+                    { id: '14', no: 14, studentId: '21837', name: 'นางสาวกนกวรรณ คำเพียว' },
+                    { id: '15', no: 15, studentId: '21838', name: 'นางสาวกมลชนก ตุ้มปามา' },
+                    { id: '16', no: 16, studentId: '21840', name: 'นางสาวกุศลิน อุตนะวงษ์' },
+                    { id: '17', no: 17, studentId: '21841', name: 'นางสาวคณิตา คำภิไร' },
+                    { id: '18', no: 18, studentId: '21842', name: 'นางสาวจริยาพร ตนะพงษ์' },
+                    { id: '19', no: 19, studentId: '21843', name: 'นางสาวชัญญพัชร์ โรจน์ปัญจสิริ' },
+                    { id: '20', no: 20, studentId: '21844', name: 'นางสาวณธิดา เมธีสุประดิษฐ์' },
+                    { id: '21', no: 21, studentId: '21845', name: 'นางสาวณัฐธิดา ศรียอดพิรุณ' },
+                    { id: '22', no: 22, studentId: '21846', name: 'นางสาวปทุมพร ล้อลำเลียง' },
+                    { id: '23', no: 23, studentId: '21847', name: 'นางสาวปนัดดา เขตสาลี' },
+                    { id: '24', no: 24, studentId: '21849', name: 'นางสาวพลอยไพลิน แก้วมูล' },
+                    { id: '25', no: 25, studentId: '21850', name: 'นางสาวพิชญาภัค ใจดี' },
+                    { id: '26', no: 26, studentId: '21853', name: 'นางสาวสุภิญญา วงค์อุด' },
+                    { id: '27', no: 27, studentId: '21855', name: 'นางสาวอินฑิรา กันทะโล' },
+                    { id: '28', no: 28, studentId: '21941', name: 'นางสาวดาววารัตน์ ดวงจิตโสภณ' },
+                    { id: '29', no: 29, studentId: '23843', name: 'นางสาวกนกพร แก้วตุ่น' },
+                    { id: '30', no: 30, studentId: '23844', name: 'นางสาวปภธิดา นิมิตรปัญญาดี' },
+                    ...Array.from({ length: 5 }, (_, i) => ({
+                        id: (i + 31).toString(),
+                        no: i + 31,
+                        studentId: '',
+                        name: `นักเรียน คนที่ ${i + 31}`
                     }))
                 ];
 
