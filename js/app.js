@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 import firebaseConfig from "./firebase-config.js";
 
 // Initialize Firebase
@@ -32,45 +32,46 @@ const modalAddTask = document.getElementById('modal-add-task');
 
 // Initialize Data (Students 1-35)
 async function initStudents() {
-    const studentsRef = ref(db, 'students');
-    onValue(studentsRef, (snapshot) => {
-        if (!snapshot.exists()) {
-            const initialStudents = [
-                { id: '1', no: 1, name: 'นายประกาศิต สุริยะ' },
-                // Mock data for other students - User can import from CSV logic here
-                ...Array.from({ length: 34 }, (_, i) => ({
-                    id: (i + 2).toString(),
-                    no: i + 2,
-                    name: `นักเรียน คนที่ ${i + 2}`
-                }))
-            ];
+    try {
+        const studentsRef = ref(db, 'students');
+        onValue(studentsRef, (snapshot) => {
+            if (!snapshot.exists()) {
+                console.log("Initializing student data...");
+                const initialStudents = [
+                    { id: '1', no: 1, name: 'นายประกาศิต สุริยะ' },
+                    ...Array.from({ length: 34 }, (_, i) => ({
+                        id: (i + 2).toString(),
+                        no: i + 2,
+                        name: `นักเรียน คนที่ ${i + 2}`
+                    }))
+                ];
 
-            Object.entries(initialStudents).forEach(([key, val]) => {
-                set(ref(db, `students/${val.id}`), val);
-            });
-        }
-    }, { onlyOnce: true });
+                initialStudents.forEach(student => {
+                    set(ref(db, `students/${student.id}`), student);
+                });
+            }
+        }, { onlyOnce: true });
+    } catch (error) {
+        console.error("Error initializing students:", error);
+    }
 }
 
 // Sync Real-time Data
 function startSync() {
-    // Sync Students
     onValue(ref(db, 'students'), (snapshot) => {
         state.students = snapshot.val() || {};
         renderStudentList();
     });
 
-    // Sync Assignments
     onValue(ref(db, 'assignments'), (snapshot) => {
         state.assignments = snapshot.val() || {};
         renderSubjectFilters();
         if (state.selectedStudentId) renderAssignments();
     });
 
-    // Sync Submissions
     onValue(ref(db, 'submissions'), (snapshot) => {
         state.submissions = snapshot.val() || {};
-        renderStudentList(); // Update progress bars
+        renderStudentList();
         if (state.selectedStudentId) renderAssignments();
     });
 }
@@ -83,6 +84,11 @@ function renderStudentList() {
     studentListEl.innerHTML = '';
 
     const studentsArray = Object.values(state.students).sort((a, b) => a.no - b.no);
+
+    if (studentsArray.length === 0) {
+        studentListEl.innerHTML = '<div class="p-4 text-center text-gray-400">กำลังโหลดข้อมูลจาก Firebase...</div>';
+        return;
+    }
 
     studentsArray.forEach(student => {
         if (searchTerm && !student.name.toLowerCase().includes(searchTerm) && !student.id.includes(searchTerm)) return;
@@ -124,7 +130,6 @@ function selectStudent(id) {
     renderAssignments();
 }
 
-// UI Logic: Render Assignments
 function renderAssignments() {
     const studentId = state.selectedStudentId;
     const studentSubs = state.submissions[studentId] || {};
@@ -197,7 +202,6 @@ function renderSubjectFilters() {
     const subjects = [...new Set(Object.values(state.assignments).map(a => a.subject))];
     const filterContainer = document.querySelector('.p-4.flex.gap-2.overflow-x-auto');
 
-    // Keep "All" button
     const allBtn = filterContainer.querySelector('[data-filter="all"]');
     filterContainer.innerHTML = '';
     filterContainer.appendChild(allBtn);
@@ -217,7 +221,6 @@ function renderSubjectFilters() {
     });
 }
 
-// Modal & Form Logic
 document.getElementById('open-add-task').onclick = () => modalAddTask.classList.remove('hidden');
 document.getElementById('close-modal').onclick = () => modalAddTask.classList.add('hidden');
 
@@ -235,13 +238,12 @@ taskForm.onsubmit = async (e) => {
 
     const tasksRef = ref(db, 'assignments');
     const new laRef = push(tasksRef);
-    await set(ref(db, `${new laRef.key}`), newTask);
+    await set(ref(db, `assignments/${new laRef.key}`), newTask);
 
     taskForm.reset();
     modalAddTask.classList.add('hidden');
 };
 
-// Mobile Tab Logic
 document.getElementById('tab-students').onclick = () => {
     document.getElementById('student-section').classList.remove('hidden');
     document.getElementById('assignment-section').classList.add('hidden');
@@ -260,10 +262,8 @@ document.getElementById('tab-tasks').onclick = () => {
     document.getElementById('tab-students').classList.remove('border-blue-600', 'text-blue-600');
 };
 
-// Search and Filter events
 document.getElementById('search-student').oninput = renderStudentList;
 document.getElementById('filter-pending').onchange = renderStudentList;
 
-// Boot
 initStudents();
 startSync();
