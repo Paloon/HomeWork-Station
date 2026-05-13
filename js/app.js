@@ -343,6 +343,7 @@ document.querySelectorAll('.student-filter-btn').forEach(btn => {
     };
 });
 
+// ... existing code ...
 // Modal & Form Logic
 const openModal = (id, contentId) => {
     const modal = document.getElementById(id);
@@ -365,6 +366,132 @@ const closeModal = (id, contentId) => {
 document.getElementById('open-add-task').onclick = () => openModal('modal-add-task', 'modal-content');
 document.getElementById('close-modal').onclick = () => closeModal('modal-add-task', 'modal-content');
 
+// --- ADMIN PANEL LOGIC ---
+const ADMIN_PASSWORD = '1234'; // Change this to a secure password
+
+document.getElementById('open-admin').onclick = () => {
+    openModal('modal-password', 'modal-password-content'); // Note: need to add id to the inner div in HTML if not present, but we can use the modal's child
+    // The HTML had the inner div without an ID, let's target it via child or fix HTML.
+    // Let's assume we want to animate the first child of the modal.
+    const content = document.querySelector('#modal-password > div');
+    content.classList.remove('scale-95', 'opacity-0');
+    content.classList.add('scale-100', 'opacity-100');
+};
+
+document.getElementById('cancel-password').onclick = () => {
+    closeModal('modal-password', 'modal-password-content'); // Simple hide since it lacks a specific content ID
+};
+
+document.getElementById('confirm-password').onclick = () => {
+    const pwd = document.getElementById('admin-password-input').value;
+    if (pwd === ADMIN_PASSWORD) {
+        closeModal('modal-password', 'modal-password-content');
+        openModal('modal-admin', 'admin-content');
+        renderAdminTasks();
+        renderAdminStudents();
+    } else {
+        alert('รหัสผ่านไม่ถูกต้อง!');
+    }
+};
+
+document.getElementById('close-admin').onclick = () => closeModal('modal-admin', 'admin-content');
+
+// Admin Tab Switching
+document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll('.admin-tab-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('text-gray-600', 'hover:bg-gray-200');
+        });
+        btn.classList.add('bg-blue-600', 'text-white');
+        btn.classList.remove('text-gray-600', 'hover:bg-gray-200');
+
+        const tabId = btn.dataset.adminTab;
+        document.querySelectorAll('.admin-tab-content').forEach(content => {
+            content.classList.add('hidden');
+            if (content.id === `admin-tab-${tabId}`) content.classList.remove('hidden');
+        });
+    };
+});
+
+async function renderAdminStudents() {
+    const listEl = document.getElementById('admin-student-list');
+    listEl.innerHTML = '';
+
+    const students = Object.values(state.students).sort((a, b) => a.no - b.no);
+    students.forEach(student => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50 transition-all';
+        tr.innerHTML = `
+            <td class="px-4 py-3">${student.no}</td>
+            <td class="px-4 py-3 font-medium">${student.name}</td>
+            <td class="px-4 py-3 text-gray-500">${student.studentId || '-'}</td>
+            <td class="px-4 py-3 text-right">
+                <button onclick="window.deleteStudent('${student.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">ลบ</button>
+            </td>
+        `;
+        listEl.appendChild(tr);
+    });
+}
+
+window.deleteStudent = async (id) => {
+    if (confirm('ยืนยันการลบนักเรียนคนนี้?')) {
+        await remove(ref(db, `students/${id}`));
+        await remove(ref(db, `submissions/${id}`));
+        renderAdminStudents();
+    }
+};
+
+async function renderAdminTasks() {
+    const listEl = document.getElementById('admin-task-list');
+    listEl.innerHTML = '';
+
+    const tasks = Object.entries(state.assignments);
+    tasks.forEach(([id, task]) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-gray-50 transition-all';
+        tr.innerHTML = `
+            <td class="px-4 py-3 font-medium">${task.title}</td>
+            <td class="px-4 py-3 text-gray-500">${task.subject}</td>
+            <td class="px-4 py-3 text-gray-500">${task.deadline}</td>
+            <td class="px-4 py-3 text-right flex justify-end gap-2">
+                <button onclick="window.editTask('${id}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">แก้ไข</button>
+                <button onclick="window.deleteTask('${id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">ลบ</button>
+            </td>
+        `;
+        listEl.appendChild(tr);
+    });
+}
+
+window.deleteTask = async (id) => {
+    if (confirm('⚠️ ยืนยันการลบงานนี้? งานนี้จะถูกลบออกจากระบบของนักเรียนทุกคน!')) {
+        await remove(ref(db, `assignments/${id}`));
+        renderAdminTasks();
+    }
+};
+
+window.editTask = (id) => {
+    const task = state.assignments[id];
+    const newTitle = prompt('แก้ไขชื่องาน:', task.title);
+    if (newTitle === null) return;
+
+    const newSubject = prompt('แก้ไขวิชา:', task.subject);
+    if (newSubject === null) return;
+
+    const newDeadline = prompt('แก้ไขวันครบกำหนด (YYYY-MM-DD):', task.deadline);
+    if (newDeadline === null) return;
+
+    update(ref(db, `assignments/${id}`), {
+        title: newTitle,
+        subject: newSubject,
+        deadline: newDeadline
+    }).then(() => {
+        renderAdminTasks();
+        alert('อัปเดตงานเรียบร้อยแล้ว');
+    });
+};
+
+// Modal and Form Logic (Keep these)
 taskForm.onsubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(taskForm);
@@ -386,6 +513,7 @@ taskForm.onsubmit = async (e) => {
     taskForm.reset();
     closeModal('modal-add-task', 'modal-content');
 };
+
 
 // Dashboard Logic
 document.getElementById('open-dashboard').onclick = () => {
