@@ -19,22 +19,22 @@
 <body class="min-h-screen flex flex-col bg-slate-50">
 
     <!-- Header -->
-    <header class="bg-white border-b px-6 py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
-        <div class="flex items-center gap-3">
-            <div class="bg-blue-600 p-2 rounded-xl">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.447 9.246 5 7.5 5S4.168 5.447 3 6.253v13C4.168 18.553 5.754 19 7.5 19s3.332-0.447 4.5-1.253 3.332-1.253 4.5-1.253 3.332 0.447 4.5 1.253v-13C21.832 5.447 20.246 5 18.5 5s-3.332 0.447-4.5 1.253-3.332 1.253-4.5 1.253z"></path></svg>
+    <header class="bg-white border-b px-3 py-2 md:px-6 md:py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="bg-blue-600 p-1.5 md:p-2 rounded-lg md:rounded-xl">
+                <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.447 9.246 5 7.5 5S4.168 5.447 3 6.253v13C4.168 18.553 5.754 19 7.5 19s3.332-0.447 4.5-1.253 3.332-1.253 4.5-1.253 3.332 0.447 4.5 1.253v-13C21.832 5.447 20.246 5 18.5 5s-3.332 0.447-4.5 1.253-3.332 1.253-4.5 1.253z"></path></svg>
             </div>
-            <h1 class="text-xl font-bold text-gray-800 uppercase tracking-tight">ระบบจัดการงาน <span class="text-blue-600">ม.5/2</span></h1>
+            <h1 class="text-sm md:text-xl font-bold text-gray-800 uppercase tracking-tight">งาน <span class="text-blue-600">ม.5/2</span></h1>
         </div>
-        <div class="flex gap-3">
-            <button id="open-dashboard" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">📊 สรุปภาพรวม</button>
-            <button id="open-admin" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">⚙️ จัดการ</button>
-            <button id="open-add-task" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200">+ เพิ่มงานใหม่</button>
+        <div class="flex gap-2 md:gap-3">
+            <button id="open-dashboard" class="hidden md:inline-flex px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">📊 สรุปภาพรวม</button>
+            <button id="open-admin" class="hidden md:inline-flex px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-all">⚙️ จัดการ</button>
+            <button id="open-add-task" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 md:px-5 md:py-2 rounded-lg md:rounded-xl text-xs md:text-sm font-bold transition-all shadow-md shadow-blue-200"><span class="md:hidden">+ งาน</span><span class="hidden md:inline">+ เพิ่มงานใหม่</span></button>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex overflow-hidden relative">
+    <main class="flex-1 flex overflow-hidden relative pb-16 md:pb-0">
 
         <!-- Left Side: Student List -->
         <section id="student-section" class="w-full md:w-80 lg:w-96 border-r bg-white flex flex-col transition-all z-0">
@@ -81,23 +81,22 @@
                     </div>
                 </div>
 
-                <div class="p-4 bg-white border-b flex flex-wrap gap-3 items-center justify-between shrink-0">
-                    <div class="flex gap-2 overflow-x-auto pb-1" id="subject-filters">
-                        <button data-filter="all" class="filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white active transition-all">ทุกวิชา</button>
+                <!-- Filter Mode Buttons -->
+                <div class="p-3 md:p-4 bg-white border-b shrink-0 space-y-2">
+                    <div class="flex gap-2" id="filter-mode-group">
+                        <button data-mode="active" class="filter-mode-btn active px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition-all">🔴 ยังไม่เสร็จ</button>
+                        <button data-mode="all" class="filter-mode-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 transition-all">📋 ทั้งหมด</button>
+                        <button data-mode="completed" class="filter-mode-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 transition-all">✅ เสร็จแล้ว</button>
                     </div>
-                    <div class="flex gap-3">
-                        <select id="filter-type" class="px-4 py-1.5 border rounded-xl text-sm outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
+                        <div class="flex gap-2 overflow-x-auto pb-1" id="subject-filters">
+                            <button data-filter="all" class="filter-btn px-3 py-1 rounded-full text-xs font-bold bg-blue-600 text-white active transition-all">ทุกวิชา</button>
+                        </div>
+                        <select id="filter-type" class="px-3 py-1.5 border rounded-xl text-xs outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all">
                             <option value="all">ทุกประเภท</option>
                             <option value="ต้องส่ง">ต้องส่ง</option>
                             <option value="ต้องทำ">ต้องทำ</option>
                             <option value="ไม่ทำก็ได้">ไม่ทำก็ได้</option>
-                        </select>
-                        <select id="filter-status" class="px-4 py-1.5 border rounded-xl text-sm outline-none bg-gray-50 focus:ring-2 focus:ring-blue-500 transition-all">
-                            <option value="all">ทุกสถานะ</option>
-                            <option value="⚪ ยังไม่เริ่ม">ยังไม่เริ่ม</option>
-                            <option value="🟡 กำลังทำ">กำลังทำ</option>
-                            <option value="🟢 เสร็จแล้ว">เสร็จแล้ว</option>
-                            <option value="✅ ส่งแล้ว">ส่งแล้ว</option>
                         </select>
                     </div>
                 </div>
@@ -107,10 +106,24 @@
         </section>
     </main>
 
-    <!-- Mobile Navigation -->
-    <nav class="md:hidden flex border-t bg-white shrink-0">
-        <button id="tab-students" class="flex-1 py-4 text-sm font-bold border-b-2 border-blue-600 text-blue-600">👥 รายชื่อ</button>
-        <button id="tab-tasks" class="flex-1 py-4 text-sm font-bold border-b-2 border-transparent text-gray-500">📝 งาน</button>
+    <!-- Mobile Navigation (Fixed Bottom) -->
+    <nav id="bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 flex border-t bg-white z-50 shadow-[0_-2px_10px_rgba(0,0,0,0.08)]">
+        <button id="tab-students" class="btm-nav-btn active flex-1 flex flex-col items-center justify-center py-2 text-blue-600 transition-all">
+            <span class="text-lg">👥</span>
+            <span class="text-[10px] font-bold mt-0.5">รายชื่อ</span>
+        </button>
+        <button id="tab-tasks" class="btm-nav-btn flex-1 flex flex-col items-center justify-center py-2 text-gray-400 transition-all">
+            <span class="text-lg">📝</span>
+            <span class="text-[10px] font-semibold mt-0.5">งาน</span>
+        </button>
+        <button id="tab-dashboard-mobile" class="btm-nav-btn flex-1 flex flex-col items-center justify-center py-2 text-gray-400 transition-all">
+            <span class="text-lg">📊</span>
+            <span class="text-[10px] font-semibold mt-0.5">สรุป</span>
+        </button>
+        <button id="tab-admin-mobile" class="btm-nav-btn flex-1 flex flex-col items-center justify-center py-2 text-gray-400 transition-all">
+            <span class="text-lg">⚙️</span>
+            <span class="text-[10px] font-semibold mt-0.5">จัดการ</span>
+        </button>
     </nav>
 
     <!-- Password Modal -->
@@ -300,6 +313,71 @@
         </div>
     </div>
 
+    <!-- Modal: Edit Student -->
+    <div id="modal-edit-student" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 modal-animate-in shadow-2xl">
+            <h3 class="text-xl font-bold text-gray-800">✏️ แก้ไขข้อมูลนักเรียน</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">เลขที่</label>
+                    <input id="edit-student-no" type="number" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ชื่อ-นามสกุล</label>
+                    <input id="edit-student-name" type="text" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">รหัสประจำตัว</label>
+                    <input id="edit-student-id" type="text" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button id="cancel-edit-student" class="flex-1 px-4 py-2.5 border rounded-xl hover:bg-gray-50 font-semibold text-gray-600 transition-all">ยกเลิก</button>
+                <button id="save-edit-student" class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-all shadow-md">💾 บันทึก</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Task -->
+    <div id="modal-edit-task" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 modal-animate-in shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-gray-800">✏️ แก้ไขงาน</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ชื่องาน</label>
+                    <input id="edit-task-title" type="text" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">วิชา</label>
+                    <input id="edit-task-subject" type="text" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ประเภท</label>
+                    <select id="edit-task-type" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="ต้องส่ง">✅ ต้องส่ง</option>
+                        <option value="ต้องทำ">📖 ต้องทำ</option>
+                        <option value="ไม่ทำก็ได้">⭐ ไม่ทำก็ได้</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">วันครบกำหนด</label>
+                    <input id="edit-task-deadline" type="date" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">คำอธิบาย</label>
+                    <textarea id="edit-task-description" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">ลิงก์ไฟล์แนบ</label>
+                    <input id="edit-task-link" type="url" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="https://...">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button id="cancel-edit-task" class="flex-1 px-4 py-2.5 border rounded-xl hover:bg-gray-50 font-semibold text-gray-600 transition-all">ยกเลิก</button>
+                <button id="save-edit-task" class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold transition-all shadow-md">💾 บันทึก</button>
+            </div>
+        </div>
+    </div>
     <!-- Firebase SDK -->
     <script type="module" src="js/app.js"></script>
 </body>
