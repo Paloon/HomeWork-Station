@@ -12,12 +12,15 @@ let state = {
     assignments: {},
     submissions: {},
     selectedStudentId: null,
+    currentFilterMode: 'active',
     currentFilter: {
         subject: 'all',
-        type: 'all',
-        status: 'all'
+        type: 'all'
     }
 };
+
+let currentEditingStudentId = null;
+let currentEditingTaskId = null;
 
 // Constants
 const STATUS_CYCLE = ['⚪ ยังไม่เริ่ม', '🟡 กำลังทำ', '🟢 เสร็จแล้ว', '✅ ส่งแล้ว'];
@@ -181,8 +184,18 @@ function selectStudent(id) {
     noStudentSelectedEl.classList.add('hidden');
     assignmentViewEl.classList.remove('hidden');
 
+    // Reset filter to show incomplete tasks by default
+    if (typeof resetFilterMode === 'function') resetFilterMode();
+
     renderStudentList();
     renderAssignments();
+
+    // On mobile, auto-switch to tasks tab
+    if (window.innerWidth < 768) {
+        document.getElementById('student-section').style.display = 'none';
+        document.getElementById('assignment-section').style.display = 'flex';
+        if (typeof setActiveTab === 'function') setActiveTab('tab-tasks');
+    }
 }
 
 function renderAssignments() {
@@ -194,8 +207,15 @@ function renderAssignments() {
         const matchSubject = state.currentFilter.subject === 'all' || task.subject === state.currentFilter.subject;
         const matchType = state.currentFilter.type === 'all' || task.type === state.currentFilter.type;
         const status = studentSubs[id]?.status || '⚪ ยังไม่เริ่ม';
-        const matchStatus = state.currentFilter.status === 'all' || status === state.currentFilter.status;
-        return matchSubject && matchType && matchStatus;
+
+        // Filter mode logic
+        let matchMode = true;
+        if (state.currentFilterMode === 'active') {
+            matchMode = status !== '✅ ส่งแล้ว' && status !== '🟢 เสร็จแล้ว';
+        } else if (state.currentFilterMode === 'completed') {
+            matchMode = status === '✅ ส่งแล้ว' || status === '🟢 เสร็จแล้ว';
+        }
+        return matchSubject && matchType && matchMode;
     });
 
     if (tasks.length === 0) {
@@ -329,10 +349,19 @@ document.getElementById('filter-type').onchange = (e) => {
     state.currentFilter.type = e.target.value;
     renderAssignments();
 };
-document.getElementById('filter-status').onchange = (e) => {
-    state.currentFilter.status = e.target.value;
-    renderAssignments();
-};
+// Filter mode buttons
+document.querySelectorAll('.filter-mode-btn').forEach(btn => {
+    btn.onclick = () => {
+        state.currentFilterMode = btn.dataset.mode;
+        document.querySelectorAll('.filter-mode-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white', 'active');
+            b.classList.add('bg-gray-100', 'text-gray-600');
+        });
+        btn.classList.remove('bg-gray-100', 'text-gray-600');
+        btn.classList.add('bg-blue-600', 'text-white', 'active');
+        if (state.selectedStudentId) renderAssignments();
+    };
+});
 document.querySelectorAll('.student-filter-btn').forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll('.student-filter-btn').forEach(b => b.classList.remove('bg-blue-600', 'text-white', 'active'));
@@ -347,19 +376,27 @@ document.querySelectorAll('.student-filter-btn').forEach(btn => {
 // Modal & Form Logic
 const openModal = (id, contentId) => {
     const modal = document.getElementById(id);
-    const content = document.getElementById(contentId);
     modal.classList.remove('hidden');
-    setTimeout(() => {
-        content.classList.remove('scale-95', 'opacity-0');
-        content.classList.add('scale-100', 'opacity-100');
-    }, 10);
+    if (contentId) {
+        const content = document.getElementById(contentId);
+        if (content) {
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+    }
 };
 
 const closeModal = (id, contentId) => {
     const modal = document.getElementById(id);
-    const content = document.getElementById(contentId);
-    content.classList.add('scale-95', 'opacity-0');
-    content.classList.remove('scale-100', 'opacity-100');
+    if (contentId) {
+        const content = document.getElementById(contentId);
+        if (content) {
+            content.classList.add('scale-95', 'opacity-0');
+            content.classList.remove('scale-100', 'opacity-100');
+        }
+    }
     setTimeout(() => modal.classList.add('hidden'), 200);
 };
 
@@ -423,11 +460,12 @@ async function renderAdminStudents() {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50 transition-all';
         tr.innerHTML = `
-            <td class="px-4 py-3">${student.no}</td>
-            <td class="px-4 py-3 font-medium">${student.name}</td>
-            <td class="px-4 py-3 text-gray-500">${student.studentId || '-'}</td>
-            <td class="px-4 py-3 text-right">
-                <button onclick="window.deleteStudent('${student.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">ลบ</button>
+            <td class="px-4 py-3 font-medium text-gray-700">${student.no}</td>
+            <td class="px-4 py-3">${student.name}</td>
+            <td class="px-4 py-3 text-gray-500 text-sm">${student.studentId || '-'}</td>
+            <td class="px-4 py-3 text-right space-x-2">
+                <button onclick="window.editStudent('${student.id}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold">✏️ แก้ไข</button>
+                <button onclick="window.deleteStudent('${student.id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">🗑️ ลบ</button>
             </td>
         `;
         listEl.appendChild(tr);
@@ -451,12 +489,12 @@ async function renderAdminTasks() {
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-gray-50 transition-all';
         tr.innerHTML = `
-            <td class="px-4 py-3 font-medium">${task.title}</td>
-            <td class="px-4 py-3 text-gray-500">${task.subject}</td>
-            <td class="px-4 py-3 text-gray-500">${task.deadline}</td>
-            <td class="px-4 py-3 text-right flex justify-end gap-2">
-                <button onclick="window.editTask('${id}')" class="text-blue-600 hover:text-blue-800 font-bold text-xs">แก้ไข</button>
-                <button onclick="window.deleteTask('${id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">ลบ</button>
+            <td class="px-4 py-3 font-medium text-gray-700">${task.title}</td>
+            <td class="px-4 py-3"><span class="px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-600">${task.subject}</span></td>
+            <td class="px-4 py-3 text-gray-500 text-sm">${task.deadline}</td>
+            <td class="px-4 py-3 text-right space-x-2">
+                <button onclick="window.editTask('${id}')" class="text-blue-600 hover:text-blue-800 text-xs font-bold">✏️ แก้ไข</button>
+                <button onclick="window.deleteTask('${id}')" class="text-red-500 hover:text-red-700 text-xs font-bold">🗑️ ลบ</button>
             </td>
         `;
         listEl.appendChild(tr);
@@ -472,24 +510,60 @@ window.deleteTask = async (id) => {
 
 window.editTask = (id) => {
     const task = state.assignments[id];
-    const newTitle = prompt('แก้ไขชื่องาน:', task.title);
-    if (newTitle === null) return;
-
-    const newSubject = prompt('แก้ไขวิชา:', task.subject);
-    if (newSubject === null) return;
-
-    const newDeadline = prompt('แก้ไขวันครบกำหนด (YYYY-MM-DD):', task.deadline);
-    if (newDeadline === null) return;
-
-    update(ref(db, `assignments/${id}`), {
-        title: newTitle,
-        subject: newSubject,
-        deadline: newDeadline
-    }).then(() => {
-        renderAdminTasks();
-        alert('อัปเดตงานเรียบร้อยแล้ว');
-    });
+    currentEditingTaskId = id;
+    document.getElementById('edit-task-title').value = task.title || '';
+    document.getElementById('edit-task-subject').value = task.subject || '';
+    document.getElementById('edit-task-type').value = task.type || 'ต้องส่ง';
+    document.getElementById('edit-task-deadline').value = task.deadline || '';
+    document.getElementById('edit-task-description').value = task.description || '';
+    const linkEl = document.getElementById('edit-task-link');
+    if (linkEl) linkEl.value = task.link || '';
+    openModal('modal-edit-task', null);
 };
+
+window.editStudent = (id) => {
+    const student = state.students[id];
+    currentEditingStudentId = id;
+    document.getElementById('edit-student-no').value = student.no || '';
+    document.getElementById('edit-student-name').value = student.name || '';
+    document.getElementById('edit-student-id').value = student.studentId || '';
+    openModal('modal-edit-student', null);
+};
+
+// Save Edit Student
+document.getElementById('save-edit-student').onclick = async () => {
+    const no = parseInt(document.getElementById('edit-student-no').value);
+    const name = document.getElementById('edit-student-name').value.trim();
+    const studentId = document.getElementById('edit-student-id').value.trim();
+    if (!name) { alert('กรุณากรอกชื่อ-นามสกุล'); return; }
+    try {
+        await update(ref(db, `students/${currentEditingStudentId}`), { no, name, studentId });
+        alert('✅ บันทึกเรียบร้อย!');
+        closeModal('modal-edit-student', null);
+        renderAdminStudents();
+    } catch (e) { alert('❌ เกิดข้อผิดพลาด: ' + e.message); }
+};
+document.getElementById('cancel-edit-student').onclick = () => closeModal('modal-edit-student', null);
+
+// Save Edit Task
+document.getElementById('save-edit-task').onclick = async () => {
+    const title = document.getElementById('edit-task-title').value.trim();
+    const subject = document.getElementById('edit-task-subject').value.trim();
+    const type = document.getElementById('edit-task-type').value;
+    const deadline = document.getElementById('edit-task-deadline').value;
+    const description = document.getElementById('edit-task-description').value.trim();
+    const linkEl = document.getElementById('edit-task-link');
+    const link = linkEl ? linkEl.value.trim() : '';
+    if (!title || !subject || !deadline) { alert('กรุณากรอกข้อมูลให้ครบ'); return; }
+    try {
+        await update(ref(db, `assignments/${currentEditingTaskId}`), { title, subject, type, deadline, description, link });
+        alert('✅ บันทึกเรียบร้อย!');
+        closeModal('modal-edit-task', null);
+        renderAdminTasks();
+        if (state.selectedStudentId) renderAssignments();
+    } catch (e) { alert('❌ เกิดข้อผิดพลาด: ' + e.message); }
+};
+document.getElementById('cancel-edit-task').onclick = () => closeModal('modal-edit-task', null);
 
 // Modal and Form Logic (Keep these)
 taskForm.onsubmit = async (e) => {
@@ -541,8 +615,11 @@ function updateDashboardStats() {
 
     document.getElementById('stat-total-students').innerText = `${totalStudents} คน`;
     document.getElementById('stat-complete-students').innerText = `${completedStudents} คน`;
-    document.getElementById('stat-pending-students').innerText = `${pendingStudents} คน`;
-    document.getElementById('stat-total-tasks').innerText = `${tasks.length} งาน`;
+
+    // Safe set for optional elements
+    const safeSet = (id, text) => { const el = document.getElementById(id); if (el) el.innerText = text; };
+    safeSet('stat-pending-students', `${pendingStudents} คน`);
+    safeSet('stat-total-tasks', `${tasks.length} งาน`);
 
     const now = new Date();
     const urgent = tasks.filter(t => {
@@ -551,8 +628,48 @@ function updateDashboardStats() {
     }).length;
     const overdue = tasks.filter(t => new Date(t.deadline) < now).length;
 
-    document.getElementById('stat-urgent-tasks').innerText = `${urgent} งาน`;
-    document.getElementById('stat-overdue-tasks').innerText = `${overdue} งาน`;
+    safeSet('stat-urgent-tasks', `${urgent} งาน`);
+    safeSet('stat-overdue-tasks', `${overdue} งาน`);
+
+    // Urgent task list
+    const urgentListEl = document.getElementById('urgent-list');
+    if (urgentListEl) {
+        const urgentTasks = tasks.filter(t => {
+            const diff = (new Date(t.deadline) - now) / (1000*60*60*24);
+            return diff <= 3;
+        }).sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 5);
+        urgentListEl.innerHTML = urgentTasks.length === 0
+            ? '<p class="text-gray-400 text-sm italic">ไม่มีงานเร่งด่วน 🎉</p>'
+            : urgentTasks.map(t => {
+                const d = Math.ceil((new Date(t.deadline) - now) / (1000*60*60*24));
+                const color = d < 0 ? 'text-red-600 bg-red-50' : 'text-orange-600 bg-orange-50';
+                return `<div class="flex justify-between items-center p-3 rounded-xl ${color}">
+                    <span class="font-medium text-sm">${t.title}</span>
+                    <span class="text-xs font-bold">${d < 0 ? 'เลย ' + Math.abs(d) + ' วัน' : 'อีก ' + d + ' วัน'}</span>
+                </div>`;
+            }).join('');
+    }
+
+    // Chart
+    const chartEl = document.getElementById('chart-completion');
+    if (chartEl) {
+        const ctx = chartEl.getContext('2d');
+        if (window._dashChart) window._dashChart.destroy();
+        const totalPairs = totalStudents * tasks.length;
+        let doneCount = 0;
+        students.forEach(s => {
+            const ss = subs[s.id] || {};
+            doneCount += Object.values(ss).filter(v => v.status === '✅ ส่งแล้ว').length;
+        });
+        window._dashChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['ส่งแล้ว', 'ยังไม่ส่ง'],
+                datasets: [{ data: [doneCount, Math.max(0, totalPairs - doneCount)], backgroundColor: ['#3b82f6', '#e5e7eb'], borderWidth: 0 }]
+            },
+            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+        });
+    }
 
     // Top Performers
     const topStudents = students.map(s => {
@@ -560,23 +677,33 @@ function updateDashboardStats() {
         const progress = Object.keys(state.assignments).length === 0 ? 0 :
             Math.round((Object.values(sSubs).filter(v => v.status === '✅ ส่งแล้ว').length / Object.keys(state.assignments).length) * 100);
         return { ...s, progress };
-    }).sort((a, b) => b.progress - a.progress).slice(0, 3);
+    }).sort((a, b) => b.progress - a.progress).slice(0, 5);
 
     const topEl = document.getElementById('stat-top-students');
-    topEl.innerHTML = topStudents.map((s, i) => `
-        <div class="flex justify-between items-center text-sm bg-white p-2 rounded-lg border">
-            <span class="text-gray-600 font-medium">${i+1}. ${s.name}</span>
-            <span class="font-bold text-blue-600">${s.progress}%</span>
-        </div>
-    `).join('');
+    if (topEl) {
+        topEl.innerHTML = topStudents.map((s, i) => `
+            <div class="flex justify-between items-center text-sm p-3 rounded-xl ${i === 0 ? 'bg-yellow-50 border border-yellow-200' : 'bg-gray-50'} mb-2">
+                <span class="font-medium text-gray-700">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)+'.'} ${s.name}</span>
+                <span class="font-bold text-blue-600">${s.progress}%</span>
+            </div>
+        `).join('');
+    }
 }
 
-// Tab Navigation
+// === Bottom Nav Tab Switching ===
+function setActiveTab(activeId) {
+    document.querySelectorAll('.btm-nav-btn').forEach(b => {
+        b.classList.remove('active', 'text-blue-600');
+        b.classList.add('text-gray-400');
+    });
+    const btn = document.getElementById(activeId);
+    if (btn) { btn.classList.add('active', 'text-blue-600'); btn.classList.remove('text-gray-400'); }
+}
+
 document.getElementById('tab-students').onclick = () => {
-    document.getElementById('student-section').classList.remove('hidden');
-    document.getElementById('assignment-section').classList.add('hidden');
-    document.getElementById('tab-students').classList.add('border-blue-600', 'text-blue-600');
-    document.getElementById('tab-tasks').classList.remove('border-blue-600', 'text-blue-600');
+    document.getElementById('student-section').style.display = '';
+    document.getElementById('assignment-section').style.display = 'none';
+    setActiveTab('tab-students');
 };
 
 document.getElementById('tab-tasks').onclick = () => {
@@ -584,11 +711,48 @@ document.getElementById('tab-tasks').onclick = () => {
         alert('กรุณาเลือกนักเรียนก่อน');
         return;
     }
-    document.getElementById('student-section').classList.add('hidden');
-    document.getElementById('assignment-section').classList.remove('hidden');
-    document.getElementById('tab-tasks').classList.add('border-blue-600', 'text-blue-600');
-    document.getElementById('tab-students').classList.remove('border-blue-600', 'text-blue-600');
+    document.getElementById('student-section').style.display = 'none';
+    document.getElementById('assignment-section').style.display = 'flex';
+    setActiveTab('tab-tasks');
 };
+
+// Mobile: Dashboard tab
+const tabDashMobile = document.getElementById('tab-dashboard-mobile');
+if (tabDashMobile) {
+    tabDashMobile.onclick = () => {
+        setActiveTab('tab-dashboard-mobile');
+        openModal('modal-dashboard', 'dashboard-content');
+        updateDashboardStats();
+    };
+}
+
+// Mobile: Admin tab
+const tabAdminMobile = document.getElementById('tab-admin-mobile');
+if (tabAdminMobile) {
+    tabAdminMobile.onclick = () => {
+        setActiveTab('tab-admin-mobile');
+        openModal('modal-password', 'modal-password-content');
+        const content = document.querySelector('#modal-password > div');
+        if (content) {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }
+    };
+}
+
+// Reset filter mode when selecting student
+function resetFilterMode() {
+    state.currentFilterMode = 'active';
+    document.querySelectorAll('.filter-mode-btn').forEach(b => {
+        b.classList.remove('bg-blue-600', 'text-white', 'active');
+        b.classList.add('bg-gray-100', 'text-gray-600');
+    });
+    const activeBtn = document.querySelector('[data-mode="active"]');
+    if (activeBtn) {
+        activeBtn.classList.remove('bg-gray-100', 'text-gray-600');
+        activeBtn.classList.add('bg-blue-600', 'text-white', 'active');
+    }
+}
 
 document.getElementById('search-student').oninput = renderStudentList;
 
