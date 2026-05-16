@@ -16,7 +16,7 @@
         .rounded-custom { border-radius: 1rem; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-50">
+<body class="h-screen flex flex-col bg-slate-50" style="height: 100dvh;">
 
     <!-- Header -->
     <header class="bg-white border-b px-3 py-2 md:px-6 md:py-4 flex justify-between items-center shrink-0 shadow-sm z-10">
@@ -34,10 +34,10 @@
     </header>
 
     <!-- Main Content -->
-    <main class="flex-1 flex overflow-hidden relative pb-16 md:pb-0">
+    <main class="flex-1 flex relative pb-16 md:pb-0" style="min-height:0; overflow:hidden;">
 
         <!-- Left Side: Student List -->
-        <section id="student-section" class="w-full md:w-80 lg:w-96 border-r bg-white flex flex-col transition-all z-0">
+        <section id="student-section" class="w-full md:w-80 lg:w-96 border-r bg-white flex flex-col transition-all z-0" style="min-height:0; overflow:hidden;">
             <div class="p-4 border-b bg-gray-50 space-y-4">
                 <div class="relative">
                     <input type="text" id="search-student" placeholder="ค้นหาชื่อ/เลขที่..." class="w-full pl-10 pr-3 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
@@ -50,7 +50,7 @@
                     <button data-filter-student="complete" class="student-filter-btn px-3 py-2 rounded-xl text-xs font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all">ส่งครบ</button>
                 </div>
             </div>
-            <div id="student-list" class="flex-1 overflow-y-auto custom-scrollbar">
+            <div id="student-list" class="flex-1 overflow-y-auto custom-scrollbar" style="-webkit-overflow-scrolling:touch;">
                 <!-- Students injected here -->
             </div>
         </section>
@@ -84,7 +84,7 @@
                 <!-- Filter Mode Buttons -->
                 <div class="p-3 md:p-4 bg-white border-b shrink-0 space-y-2">
                     <div class="flex gap-2" id="filter-mode-group">
-                        <button data-mode="active" class="filter-mode-btn active px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition-all">🔴 ยังไม่เสร็จ</button>
+                        <button data-mode="active" class="filter-mode-btn active px-3 py-1.5 rounded-full text-xs font-bold bg-blue-600 text-white transition-all">🔴 ยังไม่ส่ง</button>
                         <button data-mode="all" class="filter-mode-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 transition-all">📋 ทั้งหมด</button>
                         <button data-mode="completed" class="filter-mode-btn px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 transition-all">✅ เสร็จแล้ว</button>
                     </div>
@@ -101,7 +101,7 @@
                     </div>
                 </div>
 
-                <div id="assignment-list" class="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar"></div>
+                <div id="assignment-list" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 custom-scrollbar" style="-webkit-overflow-scrolling:touch;"></div>
             </div>
         </section>
     </main>
@@ -255,13 +255,13 @@
                 </div>
                 <button id="close-admin" class="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-200 rounded-full transition-all text-2xl">&times;</button>
             </div>
-            <div class="flex h-[70vh]">
-                <div class="w-64 bg-gray-50 border-r p-4 flex flex-col gap-2">
-                    <button data-admin-tab="students" class="admin-tab-btn p-3 text-left rounded-xl text-sm font-bold bg-blue-600 text-white transition-all">👥 จัดการนักเรียน</button>
-                    <button data-admin-tab="tasks" class="admin-tab-btn p-3 text-left rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all">📝 จัดการงานทั้งหมด</button>
-                    <button data-admin-tab="export" class="admin-tab-btn p-3 text-left rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all">📥 Export รายงาน</button>
+            <div class="flex flex-col md:flex-row" style="height:70vh; max-height:70vh;">
+                <div class="flex md:flex-col md:w-56 bg-gray-50 md:border-r border-b md:border-b-0 p-2 md:p-4 gap-1 md:gap-2 overflow-x-auto md:overflow-x-visible shrink-0">
+                    <button data-admin-tab="students" class="admin-tab-btn whitespace-nowrap px-3 py-2 md:p-3 text-left rounded-xl text-xs md:text-sm font-bold bg-blue-600 text-white transition-all">👥 นักเรียน</button>
+                    <button data-admin-tab="tasks" class="admin-tab-btn whitespace-nowrap px-3 py-2 md:p-3 text-left rounded-xl text-xs md:text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all">📝 งานทั้งหมด</button>
+                    <button data-admin-tab="export" class="admin-tab-btn whitespace-nowrap px-3 py-2 md:p-3 text-left rounded-xl text-xs md:text-sm font-bold text-gray-600 hover:bg-gray-200 transition-all">📥 Export</button>
                 </div>
-                <div class="flex-1 overflow-y-auto p-6 custom-scrollbar bg-white">
+                <div class="flex-1 overflow-y-auto p-4 md:p-6 custom-scrollbar bg-white" style="-webkit-overflow-scrolling:touch;">
                     <div id="admin-tab-students" class="admin-tab-content space-y-4">
                         <div class="flex justify-between items-center mb-6">
                             <h4 class="text-lg font-bold text-gray-800">รายชื่อนักเรียน</h4>

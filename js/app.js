@@ -211,9 +211,11 @@ function renderAssignments() {
         // Filter mode logic
         let matchMode = true;
         if (state.currentFilterMode === 'active') {
-            matchMode = status !== '✅ ส่งแล้ว' && status !== '🟢 เสร็จแล้ว';
+            // ยังไม่ส่ง = ซ่อนเฉพาะ "✅ ส่งแล้ว"
+            matchMode = status !== '✅ ส่งแล้ว';
         } else if (state.currentFilterMode === 'completed') {
-            matchMode = status === '✅ ส่งแล้ว' || status === '🟢 เสร็จแล้ว';
+            // ส่งแล้ว = แสดงเฉพาะ "✅ ส่งแล้ว"
+            matchMode = status === '✅ ส่งแล้ว';
         }
         return matchSubject && matchType && matchMode;
     });
@@ -631,12 +633,22 @@ function updateDashboardStats() {
     safeSet('stat-urgent-tasks', `${urgent} งาน`);
     safeSet('stat-overdue-tasks', `${overdue} งาน`);
 
-    // Urgent task list
+    // Urgent task list - hide tasks where ALL students have submitted
     const urgentListEl = document.getElementById('urgent-list');
     if (urgentListEl) {
         const urgentTasks = tasks.filter(t => {
             const diff = (new Date(t.deadline) - now) / (1000*60*60*24);
-            return diff <= 3;
+            if (diff > 3) return false;
+            // Check if ALL students submitted this task
+            const taskId = Object.entries(state.assignments).find(([id, a]) => a === t)?.[0];
+            if (taskId && totalStudents > 0) {
+                const allSubmitted = students.every(s => {
+                    const ss = subs[s.id] || {};
+                    return ss[taskId]?.status === '✅ ส่งแล้ว';
+                });
+                if (allSubmitted) return false; // Hide if everyone submitted
+            }
+            return true;
         }).sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).slice(0, 5);
         urgentListEl.innerHTML = urgentTasks.length === 0
             ? '<p class="text-gray-400 text-sm italic">ไม่มีงานเร่งด่วน 🎉</p>'
