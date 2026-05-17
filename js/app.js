@@ -133,8 +133,9 @@ function renderStudentList() {
         if (searchTerm && !student.name.toLowerCase().includes(searchTerm) && !student.id.includes(searchTerm)) return;
 
         const studentSubs = state.submissions[student.id] || {};
-        const totalTasks = Object.keys(state.assignments).length;
-        const submittedTasks = Object.values(studentSubs).filter(s => s.status === '✅ ส่งแล้ว').length;
+        const assignmentIds = Object.keys(state.assignments);
+        const totalTasks = assignmentIds.length;
+        const submittedTasks = assignmentIds.filter(tid => studentSubs[tid]?.status === '✅ ส่งแล้ว').length;
         const progress = totalTasks === 0 ? 0 : Math.round((submittedTasks / totalTasks) * 100);
 
         // Filter Logic
@@ -306,8 +307,9 @@ window.updateTaskStatus = (taskId, newStatus) => {
 function updateStudentProgress() {
     const studentId = state.selectedStudentId;
     const studentSubs = state.submissions[studentId] || {};
-    const totalTasks = Object.keys(state.assignments).length;
-    const submittedTasks = Object.values(studentSubs).filter(s => s.status === '✅ ส่งแล้ว').length;
+    const assignmentIds = Object.keys(state.assignments);
+    const totalTasks = assignmentIds.length;
+    const submittedTasks = assignmentIds.filter(tid => studentSubs[tid]?.status === '✅ ส่งแล้ว').length;
     const progress = totalTasks === 0 ? 0 : Math.round((submittedTasks / totalTasks) * 100);
 
     studentProgressBarEl.style.width = `${progress}%`;
@@ -602,10 +604,11 @@ function updateDashboardStats() {
     const subs = state.submissions || {};
 
     const totalStudents = students.length;
+    const assignmentIds = Object.keys(state.assignments);
     const completedStudents = students.filter(s => {
         const sSubs = subs[s.id] || {};
-        return Object.keys(state.assignments).length > 0 &&
-               Object.values(sSubs).filter(val => val.status === '✅ ส่งแล้ว').length === Object.keys(state.assignments).length;
+        return assignmentIds.length > 0 &&
+               assignmentIds.every(tid => sSubs[tid]?.status === '✅ ส่งแล้ว');
     }).length;
 
     const pendingStudents = students.filter(s => {
@@ -667,9 +670,10 @@ function updateDashboardStats() {
         if (window._dashChart) window._dashChart.destroy();
         const totalPairs = totalStudents * tasks.length;
         let doneCount = 0;
+        const aIds = Object.keys(state.assignments);
         students.forEach(s => {
             const ss = subs[s.id] || {};
-            doneCount += Object.values(ss).filter(v => v.status === '✅ ส่งแล้ว').length;
+            doneCount += aIds.filter(tid => ss[tid]?.status === '✅ ส่งแล้ว').length;
         });
         window._dashChart = new Chart(ctx, {
             type: 'doughnut',
@@ -684,8 +688,9 @@ function updateDashboardStats() {
     // Top Performers
     const topStudents = students.map(s => {
         const sSubs = subs[s.id] || {};
-        const progress = Object.keys(state.assignments).length === 0 ? 0 :
-            Math.round((Object.values(sSubs).filter(v => v.status === '✅ ส่งแล้ว').length / Object.keys(state.assignments).length) * 100);
+        const aIds = Object.keys(state.assignments);
+        const progress = aIds.length === 0 ? 0 :
+            Math.round((aIds.filter(tid => sSubs[tid]?.status === '✅ ส่งแล้ว').length / aIds.length) * 100);
         return { ...s, progress };
     }).sort((a, b) => b.progress - a.progress).slice(0, 5);
 
@@ -765,6 +770,57 @@ function resetFilterMode() {
 }
 
 document.getElementById('search-student').oninput = renderStudentList;
+
+// === CSV Export ===
+document.getElementById('btn-export-csv').onclick = () => {
+    const students = Object.values(state.students).sort((a, b) => a.no - b.no);
+    const assignments = Object.entries(state.assignments);
+    const subs = state.submissions || {};
+
+    if (assignments.length === 0) {
+        alert('ยังไม่มีงานในระบบ');
+        return;
+    }
+
+    // Header row
+    const headers = ['เลขที่', 'ชื่อ-นามสกุล', 'รหัสประจำตัว'];
+    assignments.forEach(([, a]) => headers.push(a.title));
+    headers.push('รวมส่งแล้ว', 'เปอร์เซ็นต์');
+
+    // Data rows
+    const rows = students.map(student => {
+        const sSubs = subs[student.id] || {};
+        const aIds = assignments.map(([id]) => id);
+        const submitted = aIds.filter(tid => sSubs[tid]?.status === '✅ ส่งแล้ว').length;
+        const pct = aIds.length === 0 ? 0 : Math.round((submitted / aIds.length) * 100);
+
+        const row = [student.no, student.name, student.studentId || '-'];
+        assignments.forEach(([tid]) => {
+            const status = sSubs[tid]?.status || '⚪ ยังไม่เริ่ม';
+            row.push(status);
+        });
+        row.push(submitted + '/' + aIds.length, pct + '%');
+        return row;
+    });
+
+    // Build CSV string with BOM for Excel Thai support
+    const BOM = '\uFEFF';
+    const csvContent = BOM + [headers, ...rows].map(r =>
+        r.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')
+    ).join('\n');
+
+    // Download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `รายงานส่งงาน_ม5-2_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('✅ ดาวน์โหลด CSV เรียบร้อย!');
+};
 
 initStudents();
 startSync();
