@@ -157,17 +157,17 @@
                     <label class="block text-[11px] font-bold text-gray-400 uppercase ml-1">ชื่องาน</label>
                     <input type="text" name="title" required placeholder="เช่น เขียนเรียงความ..." class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block text-[11px] font-bold text-gray-400 uppercase ml-1">วิชา</label>
                         <input type="text" name="subject" required placeholder="คณิตศาสตร์" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                     </div>
                     <div class="space-y-1">
                         <label class="block text-[11px] font-bold text-gray-400 uppercase ml-1">ประเภทงาน</label>
-                        <select name="type" class="w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white">
-                            <option value="ต้องส่ง">✅ ต้องส่ง (มี Deadline)</option>
-                            <option value="ต้องทำ">📖 ต้องทำ (ไม่มี Deadline)</option>
-                            <option value="ไม่ทำก็ได้">⭐ ไม่ทำก็ได้ (Optional)</option>
+                        <select name="type" class="w-full px-3 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white text-sm">
+                            <option value="ต้องส่ง">✅ ต้องส่ง</option>
+                            <option value="ต้องทำ">📖 ต้องทำ</option>
+                            <option value="ไม่ทำก็ได้">⭐ ไม่ทำก็ได้</option>
                         </select>
                     </div>
                 </div>
@@ -240,6 +240,14 @@
                         <h4 class="text-sm font-bold text-gray-500 uppercase mb-4">🏆 Top Performers</h4>
                         <div id="stat-top-students" class="space-y-3"></div>
                     </div>
+                </div>
+                <!-- Weekly Summary -->
+                <div class="lg:col-span-3 bg-white p-4 md:p-6 rounded-3xl border shadow-sm">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-sm font-bold text-gray-500 uppercase">📅 สรุปการบ้านสัปดาห์นี้</h4>
+                        <button id="btn-copy-weekly" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">📋 Copy</button>
+                    </div>
+                    <div id="weekly-summary" class="space-y-2 text-sm text-gray-700"></div>
                 </div>
             </div>
         </div>

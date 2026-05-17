@@ -703,7 +703,141 @@ function updateDashboardStats() {
             </div>
         `).join('');
     }
+
+    // Weekly Summary
+    generateWeeklySummary();
 }
+
+// === Weekly Homework Summary ===
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const DAY_THAI = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+
+function getWeekRange() {
+    const now = new Date();
+    const day = now.getDay(); // 0=Sun
+    const diffToMon = day === 0 ? -6 : 1 - day;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMon);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    return { monday, sunday };
+}
+
+function formatThaiDate(dateStr) {
+    const d = new Date(dateStr);
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yy = String(d.getFullYear() + 543).slice(-2);
+    return `${dd}/${mm}/${yy}`;
+}
+
+function generateWeeklySummary() {
+    const el = document.getElementById('weekly-summary');
+    if (!el) return;
+
+    const { monday, sunday } = getWeekRange();
+    const tasks = Object.entries(state.assignments);
+
+    // Filter tasks with deadline in this week
+    const weekTasks = tasks.filter(([, t]) => {
+        const dl = new Date(t.deadline);
+        return dl >= monday && dl <= sunday;
+    });
+
+    if (weekTasks.length === 0) {
+        el.innerHTML = '<p class="text-gray-400 italic">ไม่มีงานในสัปดาห์นี้ 🎉</p>';
+        return;
+    }
+
+    // Group by day of week (1=Mon to 7=Sun)
+    const grouped = {};
+    weekTasks.forEach(([id, t]) => {
+        const dl = new Date(t.deadline);
+        const dayIdx = dl.getDay(); // 0=Sun, 1=Mon...
+        const key = dayIdx === 0 ? 7 : dayIdx; // Mon=1, Sun=7
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(t);
+    });
+
+    // Render HTML
+    let html = '';
+    for (let d = 1; d <= 7; d++) {
+        if (!grouped[d]) continue;
+        const dayName = DAY_NAMES[d === 7 ? 0 : d];
+        html += `<div class="mb-3">
+            <div class="font-bold text-blue-600 text-xs uppercase mb-1">${dayName} (${DAY_THAI[d === 7 ? 0 : d]})</div>`;
+        grouped[d].forEach(t => {
+            html += `<div class="pl-3 border-l-2 border-blue-200 mb-2">
+                <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-bold">${t.subject}</span>
+                <span class="text-gray-400 mx-1">→</span>
+                <span class="font-medium text-gray-800">${t.title}</span>
+                ${t.description ? `<p class="text-xs text-gray-500 mt-0.5 ml-1">${t.description}</p>` : ''}
+                <p class="text-[10px] text-gray-400 mt-0.5 ml-1">Deadline ${formatThaiDate(t.deadline)}</p>
+            </div>`;
+        });
+        html += '</div>';
+    }
+    el.innerHTML = html;
+}
+
+// Build plain text for copying
+function buildWeeklySummaryText() {
+    const { monday, sunday } = getWeekRange();
+    const tasks = Object.entries(state.assignments);
+    const weekTasks = tasks.filter(([, t]) => {
+        const dl = new Date(t.deadline);
+        return dl >= monday && dl <= sunday;
+    });
+
+    if (weekTasks.length === 0) return 'ไม่มีงานในสัปดาห์นี้ 🎉';
+
+    const grouped = {};
+    weekTasks.forEach(([id, t]) => {
+        const dl = new Date(t.deadline);
+        const dayIdx = dl.getDay();
+        const key = dayIdx === 0 ? 7 : dayIdx;
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(t);
+    });
+
+    let text = '📚 สรุปการบ้านสัปดาห์นี้ ม.5/2\n\n';
+    for (let d = 1; d <= 7; d++) {
+        if (!grouped[d]) continue;
+        const dayName = DAY_NAMES[d === 7 ? 0 : d];
+        text += `${dayName} -\n`;
+        grouped[d].forEach(t => {
+            text += `  ${t.subject} → ${t.title}`;
+            if (t.description) text += `\n    ${t.description}`;
+            text += `\n    Deadline ${formatThaiDate(t.deadline)}\n`;
+        });
+        text += '\n';
+    }
+    return text.trim();
+}
+
+document.getElementById('btn-copy-weekly').onclick = () => {
+    const text = buildWeeklySummaryText();
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btn-copy-weekly');
+        btn.innerText = '✅ Copied!';
+        btn.classList.replace('bg-blue-600', 'bg-green-600');
+        setTimeout(() => {
+            btn.innerText = '📋 Copy';
+            btn.classList.replace('bg-green-600', 'bg-blue-600');
+        }, 2000);
+    }).catch(() => {
+        // Fallback for in-app browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('✅ คัดลอกเรียบร้อย!');
+    });
+};
 
 // === Bottom Nav Tab Switching ===
 function setActiveTab(activeId) {
