@@ -65,18 +65,18 @@
             </div>
 
             <div id="assignment-view" class="hidden flex-1 flex flex-col overflow-hidden">
-                <div class="p-6 bg-white border-b flex justify-between items-center shadow-sm">
-                    <div class="flex items-center gap-4">
-                        <div id="selected-student-avatar" class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-2xl">1</div>
-                        <div>
-                            <h2 id="selected-student-name" class="text-2xl font-bold text-gray-800">ชื่อนักเรียน</h2>
-                            <p id="selected-student-id" class="text-gray-500 text-sm">เลขที่ - | รหัสประจำตัว -</p>
+                <div class="p-3 md:p-5 bg-white border-b shadow-sm shrink-0">
+                    <div class="flex items-center gap-3">
+                        <div id="selected-student-avatar" class="w-10 h-10 md:w-12 md:h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg md:text-xl shrink-0">1</div>
+                        <div class="flex-1 min-w-0">
+                            <h2 id="selected-student-name" class="text-base md:text-xl font-bold text-gray-800 truncate">ชื่อนักเรียน</h2>
+                            <p id="selected-student-id" class="text-gray-400 text-[11px] md:text-sm truncate">เลขที่ - | รหัส -</p>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <span id="student-progress-text" class="text-sm font-bold text-blue-600 uppercase">Progress 0%</span>
-                        <div class="w-48 h-2.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                            <div id="student-progress-bar" class="h-full bg-blue-600 transition-all duration-500" style="width: 0%"></div>
+                        <div class="text-right shrink-0">
+                            <span id="student-progress-text" class="text-xs md:text-sm font-bold text-blue-600">0%</span>
+                            <div class="w-16 md:w-36 h-2 bg-gray-200 rounded-full mt-0.5 overflow-hidden">
+                                <div id="student-progress-bar" class="h-full bg-blue-600 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

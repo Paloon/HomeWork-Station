@@ -259,37 +259,35 @@ function renderAssignments() {
         group.items.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)).forEach(task => {
             const status = studentSubs[task.id]?.status || '⚪ ยังไม่เริ่ม';
             const item = document.createElement('div');
-            item.className = 'bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-4 transition-all hover:shadow-md mb-4';
+            item.className = 'bg-white p-3 md:p-5 rounded-xl md:rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 transition-all hover:shadow-md mb-3';
 
             // Status Button Group
             const statusButtons = STATUS_CYCLE.map(s => `
                 <button onclick="window.updateTaskStatus('${task.id}', '${s}')"
-                    class="px-3 py-1 rounded-md text-[10px] font-bold border transition-all ${status === s ? 'ring-2 ring-blue-500 ' + STATUS_COLORS[s] : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'}"
+                    class="px-2 py-1 rounded-md text-[9px] md:text-[10px] font-bold border transition-all whitespace-nowrap ${status === s ? 'ring-2 ring-blue-500 ' + STATUS_COLORS[s] : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'}"
                 >
                     ${s}
                 </button>
             `).join('');
 
             item.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-600">${task.subject}</span>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-600">${task.type}</span>
+                <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span class="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold bg-blue-50 text-blue-600">${task.subject}</span>
+                            <span class="px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold bg-gray-100 text-gray-600">${task.type}</span>
                         </div>
-                        <h4 class="font-bold text-gray-800 text-lg">${task.title}</h4>
-                        <p class="text-sm text-gray-500 mt-1">${task.description || 'ไม่มีคำอธิบาย'}</p>
+                        <h4 class="font-bold text-gray-800 text-sm md:text-lg leading-tight">${task.title}</h4>
+                        <p class="text-xs md:text-sm text-gray-500 mt-0.5 line-clamp-2">${task.description || ''}</p>
                     </div>
-                    <div class="text-right">
-                        <span class="text-[11px] font-bold text-gray-400 uppercase block">Deadline</span>
-                        <span class="text-sm font-bold ${group === 'Overdue' ? 'text-red-900' : 'text-gray-700'}">${task.deadline}</span>
+                    <div class="text-right shrink-0">
+                        <span class="text-[9px] md:text-[11px] font-bold text-gray-400 uppercase block">Deadline</span>
+                        <span class="text-xs md:text-sm font-bold ${key === 'Overdue' ? 'text-red-600' : 'text-gray-700'}">${task.deadline}</span>
                     </div>
                 </div>
-                <div class="flex justify-between items-center pt-4 border-t border-gray-50">
-                    <div class="flex gap-1">
-                        ${statusButtons}
-                    </div>
-                    ${task.link ? `<a href="${task.link}" target="_blank" class="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:underline">📎 ไฟล์แนบ</a>` : ''}
+                <div class="flex flex-wrap gap-1 items-center pt-2 border-t border-gray-100">
+                    ${statusButtons}
+                    ${task.link ? `<a href="${task.link}" target="_blank" class="ml-auto text-xs text-blue-600 font-semibold hover:underline">📎 แนบ</a>` : ''}
                 </div>
             `;
             assignmentListEl.appendChild(item);
@@ -313,7 +311,7 @@ function updateStudentProgress() {
     const progress = totalTasks === 0 ? 0 : Math.round((submittedTasks / totalTasks) * 100);
 
     studentProgressBarEl.style.width = `${progress}%`;
-    studentProgressTextEl.innerText = `Progress ${progress}%`;
+    studentProgressTextEl.innerText = `${progress}%`;
 }
 
 function renderSubjectFilters() {
